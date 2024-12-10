@@ -1,0 +1,122 @@
+services:
+  # MongoDB service
+  mongodb:
+    image: mongo:8.0
+    container_name: mongo
+    ports:
+      - "19999:19999"
+    volumes:
+      - mongo-data:/data/db
+    restart: always
+    networks:
+      - app-network
+    command: mongod --logpath /dev/null --port 19999
+
+  # Manager service
+  manager:
+    build: .
+    image: myapp
+    container_name: manager
+    command: /app/manager
+    ports:
+      - "18080:18080"
+    environment:
+      - MONGO_URL=mongodb://mongodb:19999/storage
+      - MANAGER_ADDR=:18080
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+
+  # Storage services
+  x-storage: &storage
+    image: myapp
+    command: /app/storage
+    restart: unless-stopped
+    depends_on:
+      - manager
+    networks:
+      - app-network
+    environment:
+      - STORAGE_ADDR=:19010
+      - REGISTER_URL=http://manager:18080/register
+      - STORAGE_DIR=/data
+    ports:
+      - "19010:19010"
+    volumes:
+      - /tmp/storage/10:/data
+
+  storage0:
+    <<: *storage
+    environment:
+      - STORAGE_ADDR=:19000
+      - REGISTER_URL=http://manager:18080/register
+      - STORAGE_DIR=/data
+    ports:
+      - "19000:19000"
+    volumes:
+      - /tmp/storage/0:/data
+
+  storage1:
+    <<: *storage
+    environment:
+      - STORAGE_ADDR=:19001
+      - REGISTER_URL=http://manager:18080/register
+      - STORAGE_DIR=/data
+    ports:
+      - "19001:19001"
+    volumes:
+      - /tmp/storage/1:/data
+
+  storage2:
+    <<: *storage
+    environment:
+      - STORAGE_ADDR=:19002
+      - REGISTER_URL=http://manager:18080/register
+      - STORAGE_DIR=/data
+    ports:
+      - "19002:19002"
+    volumes:
+      - /tmp/storage/2:/data
+
+  storage3:
+    <<: *storage
+    environment:
+      - STORAGE_ADDR=:19003
+      - REGISTER_URL=http://manager:18080/register
+      - STORAGE_DIR=/data
+    ports:
+      - "19003:19003"
+    volumes:
+      - /tmp/storage/3:/data
+
+  storage4:
+    <<: *storage
+    environment:
+      - STORAGE_ADDR=:19004
+      - REGISTER_URL=http://manager:18080/register
+      - STORAGE_DIR=/data
+    ports:
+      - "19004:19004"
+    volumes:
+      - /tmp/storage/4:/data
+
+  storage5:
+    <<: *storage
+    command: sh -c "sleep 10 && /app/storage"
+    environment:
+      - STORAGE_ADDR=:19005
+      - REGISTER_URL=http://manager:18080/register
+      - STORAGE_DIR=/data
+    ports:
+      - "19005:19005"
+    volumes:
+      - /tmp/storage/5:/data
+
+volumes:
+  mongo-data:
+
+networks:
+  app-network:
+    driver: bridge
