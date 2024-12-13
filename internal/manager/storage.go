@@ -2,6 +2,7 @@ package manager
 
 import (
 	"errors"
+	"log"
 	"net/url"
 	"time"
 )
@@ -25,15 +26,15 @@ func (m *Manager) updateStorage(target *Scheme, commited bool) {
 	m.Lock()
 	defer m.Unlock()
 
-	for _, storage := range m.storages {
-		url, _ := url.Parse(target.URL)
-		if storage.URL == url.Host {
-			if commited {
-				storage.Used += target.Size
-			} else {
-				storage.Used -= target.Size
-			}
-			break
+	if !commited {
+		u, err := url.Parse(target.URL)
+		if err != nil {
+			log.Printf("updateStorage: Failed to parse URL: %v", err)
+			return
+		}
+		baseURL := u.Scheme + "://" + u.Host
+		if storage, found := m.storages[baseURL]; found {
+			storage.Used -= target.Size
 		}
 	}
 }

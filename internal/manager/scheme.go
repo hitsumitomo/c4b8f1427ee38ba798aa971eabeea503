@@ -23,6 +23,9 @@ func (m *Manager) uploadScheme(fileSize int) (scheme []*Scheme, err error) {
 
     // Calculate available percent for each storage
     for _, storage := range m.storages {
+		if storage.Used >= storage.Limit {
+			continue
+		}
         storage.availablePercent = 100 - (float64(storage.Used) / float64(storage.Limit) * 100)
         totalPercent += storage.availablePercent
         storages = append(storages, storage)
@@ -54,6 +57,7 @@ func (m *Manager) uploadScheme(fileSize int) (scheme []*Scheme, err error) {
                 URL:  storage.URL,
                 Size: storage.proportion,
             })
+			storage.Used += storage.proportion // if rollback, this will be reverted
         }
     }
     return scheme, nil

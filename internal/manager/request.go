@@ -49,9 +49,7 @@ func (m *Manager) commitScheme(scheme []*Scheme) error {
 		if resp.StatusCode != http.StatusOK {
 			return fmt.Errorf("failed to commit chunk, status code: %d", resp.StatusCode)
 		}
-
 		log.Printf("Committed chunk: %s\n", target.URL)
-		m.updateStorage(target, true)
 	}
 	return nil
 }
